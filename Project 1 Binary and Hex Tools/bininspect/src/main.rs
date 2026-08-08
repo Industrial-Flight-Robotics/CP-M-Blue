@@ -1,6 +1,6 @@
 use std::env;
 use std::fs;
-use std::path::Path;
+//use std::path::Path;
 use std::process::ExitCode;
 
 fn main() -> ExitCode {
@@ -17,7 +17,7 @@ fn main() -> ExitCode {
         Ok(data) => {
             println!("File: {}", filename);
             println!("Size: {} bytes", data.len());
-
+    
             ExitCode::SUCCESS
         }
         Err(error) => {
@@ -27,7 +27,7 @@ fn main() -> ExitCode {
     }
 }
 
-fn read_binary_file<P: AsRef<Path>>(path: P) -> std::io::Result<Vec<u8>> {
+fn read_binary_file(path: &str) -> std::io::Result<Vec<u8>> {
     fs::read(path)
 }
 
