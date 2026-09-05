@@ -1,4 +1,5 @@
 use std::env;
+use std::fs;
 use std::process::ExitCode;
 
 // while in the src dir, to run, carpgo run -- .\binary filename. bin files need to be in the same dir as the src dir, or you can provide the full path to the file.
@@ -12,7 +13,7 @@ fn main()-> ExitCode{  // Adding ExitCode as the return type of the main functio
 
 
     if args.len() < 2 {
-        println!("Usage: {} <filename>", args[0]);
+        eprintln!("Usage: {} <filename>", args[0]);
         return ExitCode::FAILURE; // Return a failure exit code if the user did not provide a filename argument.
     }
 
@@ -29,6 +30,25 @@ fn main()-> ExitCode{  // Adding ExitCode as the return type of the main functio
     // &args[1] is an example of "borrowing" in Rust. It creates a reference to the second element of the args vector, which is the filename provided by the user. This allows us to use the filename without taking ownership of it, which is important in Rust's ownership model.
     // if we need to just look at some data without taking ownership of it, we can borrow it. Borrowing is a way to access data without taking ownership of it. In this case, we are borrowing the filename from the args vector so that we can use it without taking ownership of it.
     let filename = &args[1];
+
+
+    let file =  fs::read(filename); // Read the contents of the file specified by the filename argument. The read function returns a Result type, which can be either Ok or Err. If the file is read successfully, it returns Ok with the contents of the file as a vector of bytes. If there is an error reading the file, it returns Err with an error message.
+
+
+
+    match file {
+        Ok(data) => {
+            println!("File: {}", filename); // Print the filename.
+            println!("Size: {} bytes", data.len()); // Print the size of the file.
+
+            return ExitCode::SUCCESS; // Return a success exit code if the file was read successfully.
+        }
+        Err(error) => {
+            eprintln!("Error reading file {}: {}", filename, error); // Print an error message if there was an error reading the file. The eprintln! macro is used to print the error message to the standard error stream.
+            return ExitCode::FAILURE; // Return a failure exit code if there was an error reading the file.
+        }
+    }
+
 
     println!("Filename: {}", filename);
     ExitCode::SUCCESS // Return a success exit code if the program ran successfully.
