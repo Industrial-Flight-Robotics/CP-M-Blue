@@ -41,6 +41,16 @@ fn main()-> ExitCode{  // Adding ExitCode as the return type of the main functio
             println!("File: {}", filename); // Print the filename.
             println!("Size: {} bytes", data.len()); // Print the size of the file.
 
+            let mut addr: usize = 0; // Initialize the address variable to 0. This variable will be used to keep track of the current address in the file as we iterate over the bytes.
+
+            for byte in &data{
+                if addr % 16 == 0 {
+                    print!("{:04X}: ", addr); // Print the current address in hexadecimal format. The {:04X} format specifier prints the address as a four-digit hexadecimal number, with leading zeros if necessary.
+                }
+                print!("{:02X} ", byte); // Print each byte of the file in hexadecimal format. The {:02X} format specifier prints the byte as a two-digit hexadecimal number, with leading zeros if necessary.
+            }
+            println!(); // Print a newline character after printing all the bytes.
+
             return ExitCode::SUCCESS; // Return a success exit code if the file was read successfully.
         }
         Err(error) => {
