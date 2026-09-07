@@ -46,23 +46,23 @@ fn main()-> ExitCode{  // Adding ExitCode as the return type of the main functio
             
             for chunk in data.chunks(16)
             {
-                print!("{:04X}: ", addr);
+                print!("{:04X}: ", addr);  // print the current address in hexadecimal format, padded with zeros to 4 digits. The {:04X} format specifier is used to format the address as a hexadecimal number with at least 4 digits, padding with zeros if necessary.
  
-                for byte in chunk
+                for byte in chunk // iterate over the bytes in the current chunk and print each byte in hexadecimal format, padded with zeros to 2 digits. The {:02X} format specifier is used to format the byte as a hexadecimal number with at least 2 digits, padding with zeros if necessary.
                 {
                     print!("{:02X} ", byte);
                 }
 
-                for _ in chunk.len()..16
+                for _ in chunk.len()..16  //
                 {
                     print!("   ");
                 }
 
                 print!(" |");
 
-                for byte in chunk
+                for byte in chunk // iterate over the bytes in the current chunk and print each byte as a character if it is a printable ASCII character, or a dot (.) if it is not. The is_ascii_graphic() method is used to check if the byte is a printable ASCII character, and the *byte == b' ' condition is used to check if the byte is a space character.
                 {
-                    if byte.is_ascii_graphic() || *byte == b' '
+                    if byte.is_ascii_graphic() || *byte == b' ' // check if the byte is a printable ASCII character or a space character
                     {
                         print!("{}", *byte as char);
                     }
@@ -74,7 +74,7 @@ fn main()-> ExitCode{  // Adding ExitCode as the return type of the main functio
 
                 println!("|");
 
-                addr = addr + 16;
+                addr   = addr + 16; // increment the address variable by 16 for the next chunk of bytes.
             }
 
             return ExitCode::SUCCESS; // Return a success exit code if the file was read successfully.
