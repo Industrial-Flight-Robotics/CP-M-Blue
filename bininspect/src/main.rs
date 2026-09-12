@@ -1,3 +1,5 @@
+
+mod hexlib; // Declare the hexlib module. This allows us to use the functions defined in the hexlib.rs file.
 use std::env;
 use std::fs;
 use std::process::ExitCode;
@@ -12,10 +14,12 @@ fn main()-> ExitCode{  // Adding ExitCode as the return type of the main functio
     let args: Vec<String> = env::args().collect();
 
 
-    if args.len() < 2 {
-        eprintln!("Usage: {} <filename>", args[0]);
-        return ExitCode::FAILURE; // Return a failure exit code if the user did not provide a filename argument.
+   if args.len() < 2 || args.len() > 3
+    {
+        eprintln!("Usage: bininspect <filename> [load-address]");
+        return ExitCode::FAILURE;
     }
+
 
     // Print the command line arguments in Debug Format. {:#?} is the pretty Debug format specifier. Regular Debug format specifier is {:?}. The pretty Debug format specifier prints the output in a more readable format with indentation and line breaks.
     // println!("Arguments: {:#?}", args);
@@ -32,50 +36,53 @@ fn main()-> ExitCode{  // Adding ExitCode as the return type of the main functio
     let filename = &args[1];
 
 
-    let file =  fs::read(filename); // Read the contents of the file specified by the filename argument. The read function returns a Result type, which can be either Ok or Err. If the file is read successfully, it returns Ok with the contents of the file as a vector of bytes. If there is an error reading the file, it returns Err with an error message.
+    // Get the optional load address.
+    //
+    // If the user does not provide one,
+    // use 0x0000.
+    //
+    let load_address: u16 = match args.get(2)
+    {
+        Some(value) =>
+        {
+            match parse_address(value)
+            {
+                Ok(address) =>
+                {
+                    address
+                }
 
+                Err(error) =>
+                {
+                    eprintln!("Error: {}", error);
+                    return ExitCode::FAILURE;
+                }
+            }
+        }
+
+        None =>
+        {
+            0x0000
+        }
+    };
+    
+
+    let file =  fs::read(filename); // Read the contents of the file specified by the filename argument. The read function returns a Result type, which can be either Ok or Err. If the file is read successfully, it returns Ok with the contents of the file as a vector of bytes. If there is an error reading the file, it returns Err with an error message.
 
 
     match file {
         Ok(data) => {
             println!("File: {}", filename); // Print the filename.
             println!("Size: {} bytes", data.len()); // Print the size of the file.
-            println!(); // print a newline
 
-            let mut addr: usize = 0; // Initialize the address variable to 0. This variable will be used to keep track of the current address in the file as we iterate over the bytes.
-            
-            for chunk in data.chunks(16)
-            {
-                print!("{:04X}: ", addr);  // print the current address in hexadecimal format, padded with zeros to 4 digits. The {:04X} format specifier is used to format the address as a hexadecimal number with at least 4 digits, padding with zeros if necessary.
- 
-                for byte in chunk // iterate over the bytes in the current chunk and print each byte in hexadecimal format, padded with zeros to 2 digits. The {:02X} format specifier is used to format the byte as a hexadecimal number with at least 2 digits, padding with zeros if necessary.
-                {
-                    print!("{:02X} ", byte);
-                }
+            let checksum_8 = hexlib::checksum_byte(&data);
+            let checksum_16 = hexlib::checksum_word(&data);
 
-                for _ in chunk.len()..16  //
-                {
-                    print!("   ");
-                }
+            println!("Checksum: 0x{:02X}", checksum_8);
+            println!("Checksum: 0x{:04X}", checksum_16);
 
-                print!(" |");
-
-                for byte in chunk // iterate over the bytes in the current chunk and print each byte as a character if it is a printable ASCII character, or a dot (.) if it is not. The is_ascii_graphic() method is used to check if the byte is a printable ASCII character, and the *byte == b' ' condition is used to check if the byte is a space character.
-                {
-                    if byte.is_ascii_graphic() || *byte == b' ' // check if the byte is a printable ASCII character or a space character
-                    {
-                        print!("{}", *byte as char);
-                    }
-                    else
-                    {
-                        print!(".");
-                    }
-                }
-
-                println!("|");
-
-                addr   = addr + 16; // increment the address variable by 16 for the next chunk of bytes.
-            }
+            hexlib::hexdump(&data, load_address); // Call the print_hex_dump function to print the hex dump of the file contents. We pass a reference to the data vector and the starting address (0) as arguments.
+         
 
             return ExitCode::SUCCESS; // Return a success exit code if the file was read successfully.
         }
@@ -88,4 +95,42 @@ fn main()-> ExitCode{  // Adding ExitCode as the return type of the main functio
 
     println!("Filename: {}", filename);
     ExitCode::SUCCESS // Return a success exit code if the program ran successfully.
+}
+
+
+
+fn parse_address(value: &str) -> Result<u16, String>
+{
+    if value.starts_with("0x")
+    {
+        let hex = &value[2..];
+
+        match u16::from_str_radix(hex, 16)
+        {
+            Ok(address) =>
+            {
+                return Ok(address);
+            }
+
+            Err(_) =>
+            {
+                return Err(String::from("Invalid hexadecimal address"));
+            }
+        }
+    }
+    else
+    {
+        match value.parse::<u16>()
+        {
+            Ok(address) =>
+            {
+                return Ok(address);
+            }
+
+            Err(_) =>
+            {
+                return Err(String::from("Invalid decimal address"));
+            }
+        }
+    }
 }
