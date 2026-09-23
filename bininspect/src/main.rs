@@ -1,8 +1,12 @@
 
-mod hexlib; // Declare the hexlib module. This allows us to use the functions defined in the hexlib.rs file.
+mod hexlib;
+mod memory;
+
+use memory::Memory;
 use std::env;
 use std::fs;
 use std::process::ExitCode;
+
 
 // while in the src dir, to run, carpgo run -- .\binary filename. bin files need to be in the same dir as the src dir, or you can provide the full path to the file.
 
@@ -72,17 +76,54 @@ fn main()-> ExitCode{  // Adding ExitCode as the return type of the main functio
 
     match file {
         Ok(data) => {
+
+            let end_address = load_address as usize + data.len();
+
+            if end_address > 65536
+            {
+                eprintln!("Error: file does not fit in 64 KB memory");
+                return ExitCode::FAILURE;
+            }
+
+
             println!("File: {}", filename); // Print the filename.
             println!("Size: {} bytes", data.len()); // Print the size of the file.
 
             let checksum_8 = hexlib::checksum_byte(&data);
             let checksum_16 = hexlib::checksum_word(&data);
 
-            println!("Checksum: 0x{:02X}", checksum_8);
-            println!("Checksum: 0x{:04X}", checksum_16);
+
+            println!("File Checksum: 0x{:02X}", checksum_8);
+            println!("File Checksum: 0x{:04X}", checksum_16);
+
 
             hexlib::hexdump(&data, load_address); // Call the print_hex_dump function to print the hex dump of the file contents. We pass a reference to the data vector and the starting address (0) as arguments.
          
+
+
+            /* 
+            let mut memory: [u8; 65536] = [0; 65536];
+
+            let start = load_address as usize;
+
+            for i in 0..data.len()
+            {
+                memory[start + i] = data[i];
+                println!("Memory[0x{:04X}] = 0x{:02X}", start + i, memory[start + i]);
+            }
+            */
+        
+
+            let mut memory = Memory::new();
+
+            memory.write(0x0100, 0x3E);
+            memory.write(0x0101, 0x41);
+
+            let value1 = memory.read(0x0100);
+            let value2 = memory.read(0x0101);
+
+            println!("0x0100 contains 0x{:02X}", value1);
+            println!("0x0101 contains 0x{:02X}", value2);
 
             return ExitCode::SUCCESS; // Return a success exit code if the file was read successfully.
         }
