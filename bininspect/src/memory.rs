@@ -22,4 +22,14 @@ impl Memory
     {
         self.data[address as usize] = value;
     }
+
+    pub fn load(&mut self, start_address: u16, program: &[u8])
+    {
+        let start = start_address as usize;
+
+        for i in 0..program.len()
+        {
+            self.data[start + i] = program[i];
+        }
+    }
 }

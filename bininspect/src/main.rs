@@ -10,7 +10,7 @@ use std::process::ExitCode;
 
 // while in the src dir, to run, carpgo run -- .\binary filename. bin files need to be in the same dir as the src dir, or you can provide the full path to the file.
 
-fn main()-> ExitCode{  // Adding ExitCode as the return type of the main function allows us to return an exit code to the operating system when the program finishes executing. This is useful for indicating whether the program ran successfully or encountered an error.
+fn main()-> ExitCode {  // Adding ExitCode as the return type of the main function allows us to return an exit code to the operating system when the program finishes executing. This is useful for indicating whether the program ran successfully or encountered an error.
                        // Also in Windows, run $LASTEXITCODE to check if the program ran successfully or encountered an error. If the program ran successfully, $LASTEXITCODE will be 0. If the program encountered an error, $LASTEXITCODE will be a non-zero value.                
 
 
@@ -76,7 +76,6 @@ fn main()-> ExitCode{  // Adding ExitCode as the return type of the main functio
 
     match file {
         Ok(data) => {
-
             let end_address = load_address as usize + data.len();
 
             if end_address > 65536
@@ -97,33 +96,20 @@ fn main()-> ExitCode{  // Adding ExitCode as the return type of the main functio
             println!("File Checksum: 0x{:04X}", checksum_16);
 
 
+            println!("Dump File:");
             hexlib::hexdump(&data, load_address); // Call the print_hex_dump function to print the hex dump of the file contents. We pass a reference to the data vector and the starting address (0) as arguments.
          
+        
+            let mut memory = Memory::new();
+            memory.load(load_address, &data);
+     
 
-
-            /* 
-            let mut memory: [u8; 65536] = [0; 65536];
 
             let start = load_address as usize;
-
-            for i in 0..data.len()
-            {
-                memory[start + i] = data[i];
-                println!("Memory[0x{:04X}] = 0x{:02X}", start + i, memory[start + i]);
+            for i in 0..data.len(){
+                println!("Memory[0x{:04X}] = 0x{:02X}", start + i, memory.read((start + i) as u16));
             }
-            */
-        
 
-            let mut memory = Memory::new();
-
-            memory.write(0x0100, 0x3E);
-            memory.write(0x0101, 0x41);
-
-            let value1 = memory.read(0x0100);
-            let value2 = memory.read(0x0101);
-
-            println!("0x0100 contains 0x{:02X}", value1);
-            println!("0x0101 contains 0x{:02X}", value2);
 
             return ExitCode::SUCCESS; // Return a success exit code if the file was read successfully.
         }
@@ -132,10 +118,6 @@ fn main()-> ExitCode{  // Adding ExitCode as the return type of the main functio
             return ExitCode::FAILURE; // Return a failure exit code if there was an error reading the file.
         }
     }
-
-
-    println!("Filename: {}", filename);
-    ExitCode::SUCCESS // Return a success exit code if the program ran successfully.
 }
 
 
