@@ -100,9 +100,24 @@ fn main()-> ExitCode {  // Adding ExitCode as the return type of the main functi
             hexlib::hexdump(&data, load_address); // Call the print_hex_dump function to print the hex dump of the file contents. We pass a reference to the data vector and the starting address (0) as arguments.
          
         
+    
             let mut memory = Memory::new();
-            memory.load(load_address, &data);
-     
+
+            let result = memory.load(load_address, &data);
+
+            match result
+            {
+                Ok(()) =>
+                {
+                    println!("Program loaded successfully.");
+                }
+
+                Err(error) =>
+                {
+                    eprintln!("Error loading program: {}", error);
+                    return ExitCode::FAILURE;
+                }
+            }
 
 
             let start = load_address as usize;
